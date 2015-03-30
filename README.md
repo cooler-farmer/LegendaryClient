@@ -140,6 +140,9 @@ Other Features
 **Elo Boost Block**
 Automatically blocks messages from elo boosters. No more spam
 
+**Plugin system**
+It's all smoke and mirrors.
+
 #Donations
 Donations will be used for ONLY this project/other league related projects
 Examples include:
