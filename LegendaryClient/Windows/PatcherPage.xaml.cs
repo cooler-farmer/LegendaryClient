@@ -90,7 +90,7 @@ namespace LegendaryClient.Windows
 
             LogTextBox("");
             LogTextBox("Checking Game Version");
-            if (await UpdateGameClient())
+            if (UpdateGameClient())
                 return;
 
             TotalProgessBar.Value = 100;
@@ -417,7 +417,7 @@ namespace LegendaryClient.Windows
 
         #region GameClient
 
-        private async Task<bool> UpdateGameClient()
+        private bool UpdateGameClient()
         {
             var updateRegion = BaseUpdateRegion.GetUpdateRegion(Client.UpdateRegion);
             var lolRootPath = GetLolRootPath(false);
