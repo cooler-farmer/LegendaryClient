@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
@@ -7,6 +8,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -35,6 +37,14 @@ namespace LegendaryClient.Windows
     /// </summary>
     public partial class PatcherPage
     {
+            [DllImport("user32.dll")]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+            [DllImport("user32.dll")]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            static extern bool EnableWindow(IntPtr hWnd, bool bEnable);
+
+
         public PatcherPage()
         {
             InitializeComponent();
@@ -80,7 +90,7 @@ namespace LegendaryClient.Windows
 
             LogTextBox("");
             LogTextBox("Checking Game Version");
-            if (UpdateGameClient())
+            if (await UpdateGameClient())
                 return;
 
             TotalProgessBar.Value = 100;
@@ -407,7 +417,7 @@ namespace LegendaryClient.Windows
 
         #region GameClient
 
-        private bool UpdateGameClient()
+        private async Task<bool> UpdateGameClient()
         {
             var updateRegion = BaseUpdateRegion.GetUpdateRegion(Client.UpdateRegion);
             var lolRootPath = GetLolRootPath(false);
@@ -442,12 +452,8 @@ namespace LegendaryClient.Windows
                 else
                 {
                     LogTextBox("League of Legends is not Up-To-Date or location is incorrect");
-                    Dispatcher.BeginInvoke(DispatcherPriority.Input,
-                        new ThreadStart(() =>
-                        {
-                            SkipPatchButton.IsEnabled = true;
-                            FindClientButton.Visibility = Visibility.Visible;
-                        }));
+                    SkipPatchButton.IsEnabled = true;
+                    FindClientButton.Visibility = Visibility.Visible;
                     toExit = true;
                 }
             }
