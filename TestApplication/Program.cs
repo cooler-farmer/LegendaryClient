@@ -38,11 +38,13 @@ Air Installed Version:   {7}
 Air Newest Version:      {8}
 
 DD Installed Version:    {9}
-DD Newest Version:       {10}",
+DD Newest Version:       {10}
+
+Theme:                   {11}",
                                 sw.ElapsedMilliseconds, report.ReportType, report.UpdateRequired,
                                 report.AirReport.UpdateSize, report.DataDragonReport.UpdateSize, report.TotalUpdateSize,
                                 report.AirReport.FilesToUpdate.Length, report.AirReport.InstalledVersion, report.AirReport.NewestVersion,
-                                report.DataDragonReport.InstalledVersion, report.DataDragonReport.NewestVersion);
+                                report.DataDragonReport.InstalledVersion, report.DataDragonReport.NewestVersion, report.AirReport.Theme);
 
             Console.ReadLine();
         }

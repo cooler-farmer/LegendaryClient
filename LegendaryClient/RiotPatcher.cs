@@ -15,7 +15,6 @@ namespace LegendaryClient
 {
     public class RiotPatcher
     {
-        private string _themeName;
         private readonly HttpClient _standardClient = new HttpClient();
 
         public RiotPatcher(BaseUpdateRegion region)
@@ -184,7 +183,8 @@ namespace LegendaryClient
                 var themeFiles = themeInformation.Item1;
                 if (themeFiles != null && themeFiles.Length > 0)
                     updateFiles.AddRange(themeFiles);
-                _themeName = themeInformation.Item2;
+                var themeName = themeInformation.Item2;
+                report.Theme = themeName;
 
                 //Check Individual Files
                 var gameStatsFile = files.First(f => f.RelativePath.Contains("gameStats_en_US.sqlite"));
@@ -507,7 +507,6 @@ namespace LegendaryClient
 
         public DataDragonPrePatchReport DataDragonReport { get; set; }
         public AirPrePatchReport AirReport { get; set; }
-        public string Theme { get; set; }
     }
 
     public class AirPrePatchReport
@@ -517,6 +516,7 @@ namespace LegendaryClient
         public Version NewestVersion { get; set; }
         public long UpdateSize { get { return FilesToUpdate.Sum(f => f.FileSize); }}
         public AirPatcherFile[] FilesToUpdate { get; set; }
+        public string Theme { get; set; }
     }
 
     public class DataDragonPrePatchReport
