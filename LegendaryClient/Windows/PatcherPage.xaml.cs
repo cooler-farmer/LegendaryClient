@@ -37,14 +37,6 @@ namespace LegendaryClient.Windows
     /// </summary>
     public partial class PatcherPage
     {
-            [DllImport("user32.dll")]
-            [return: MarshalAs(UnmanagedType.Bool)]
-            static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-            [DllImport("user32.dll")]
-            [return: MarshalAs(UnmanagedType.Bool)]
-            static extern bool EnableWindow(IntPtr hWnd, bool bEnable);
-
-
         public PatcherPage()
         {
             InitializeComponent();
@@ -81,7 +73,7 @@ namespace LegendaryClient.Windows
             TotalProgessBar.Value = 40;
             LogTextBox("");
             LogTextBox("Updating Data Dragon");
-            await DownloadDataDragon(patcherClient);
+            Task t = await DownloadDataDragon(patcherClient);
 
             TotalProgessBar.Value = 80;
             LogTextBox("");
@@ -93,12 +85,14 @@ namespace LegendaryClient.Windows
             if (UpdateGameClient())
                 return;
 
+            if (t != null)
+                await t;
+
             TotalProgessBar.Value = 100;
             SkipPatchButton.Content = "Play";
             CurrentProgressLabel.Content = "Finished Patching";
             CurrentStatusLabel.Content = "Ready To Play";
             SkipPatchButton.IsEnabled = true;
-            //SkipPatchButton_Click(null, null);
 
             if (Settings.Default.AutoPlay)
                 SkipPatchButton_Click(null, null);
@@ -116,7 +110,6 @@ namespace LegendaryClient.Windows
             CurrentProgressLabel.Content = String.Format("Downloaded {0:0.00} MBs of {1:0.00} MBs", e.BytesReceived / 1024d / 1024d, e.TotalBytesToReceive / 1024d / 1024d);
             CurrentProgressBar.Value = percentage;
         }
-
 
         private static string GetHumanSize(long totalSize)
         {
@@ -309,7 +302,7 @@ namespace LegendaryClient.Windows
             return s;
         }
 
-        private async Task DownloadDataDragon(WebClient patcherClient)
+        private async Task<Task> DownloadDataDragon(WebClient patcherClient)
         {
             if (!Directory.Exists(Path.Combine(Client.ExecutingDirectory, "Assets")))
                 Directory.CreateDirectory(Path.Combine(Client.ExecutingDirectory, "Assets"));
@@ -325,7 +318,7 @@ namespace LegendaryClient.Windows
             {
                 LogTextBox("Failed to get DDragon version. Either not able to be found or unknown error (most likely the website is in maitenance, please try again in an hour or so)");
                 LogTextBox("Continuing could cause errors. Report this as an issue if it occurs again in a few hours.");
-                return;
+                return null;
             }
 
             var dDragonVersion = File.ReadAllText(GetAssetsDirectory("VERSION_DDragon"));
@@ -348,13 +341,14 @@ namespace LegendaryClient.Windows
                         File.Delete(ddragonLocation);
                     }
                     await patcherClient.DownloadFileTaskAsync(dDragonDownloadUrl, GetAssetsDirectory("dragontail-" + DDragonVersion + ".tgz"));
-                    await ExtractDDragon();
+                    return ExtractDDragon();
                 }
                 catch
                 {
                     Client.Log("Probably updated version number without actually downloading the files.");
                 }
             }
+            return null;
         }
 
         private async Task ExtractDDragon()
@@ -525,7 +519,7 @@ namespace LegendaryClient.Windows
                     CurrentProgressLabel.Content = "Retrieving Air Assets";
                     try
                     {
-                        LogTextBox(String.Format("Downloading {0} ({1:00} KB)from http://l3cdn.riotgames.com",
+                        LogTextBox(String.Format("Downloading {0} ({1:00} KB) from http://l3cdn.riotgames.com",
                             "gameStats_en_US.sqlite",
                             manifestList.First(m => m.RelativePath.Contains("gameStats_en_US.sqlite")).FileSize));
                         await updateClient.DownloadFileTaskAsync(manifestList.First(m => m.RelativePath.Contains("gameStats_en_US.sqlite")).AbsolutePath,
@@ -534,7 +528,7 @@ namespace LegendaryClient.Windows
 
                         if (Client.UpdateRegion != "Garena")
                         {
-                            LogTextBox(String.Format("Downloading {0} ({1:00} KB)from http://l3cdn.riotgames.com",
+                            LogTextBox(String.Format("Downloading {0} ({1:00} KB) from http://l3cdn.riotgames.com",
                                 "ClientLibCommon.dat",
                                 manifestList.First(m => m.RelativePath.Contains("ClientLibCommon.dat")).FileSize));
                             await updateClient.DownloadFileTaskAsync(
