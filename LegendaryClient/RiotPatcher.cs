@@ -17,18 +17,35 @@ namespace LegendaryClient
     {
         private readonly HttpClient _standardClient = new HttpClient();
 
-        public RiotPatcher(BaseUpdateRegion region)
+        /// <summary>
+        /// Creates an instance of <see cref="RiotPatcher"/>
+        /// </summary>
+        /// <param name="region">Region used for patching</param>
+        /// <param name="executingDirectory">Executing directory used to store the data</param>
+        public RiotPatcher(BaseUpdateRegion region, string executingDirectory)
         {
             UpdateRegion = region;
+            ExecutingDirectory = executingDirectory;
         }
 
+        /// <summary>
+        /// Region that will be updated
+        /// </summary>
         public BaseUpdateRegion UpdateRegion { get; private set; }
+
+        /// <summary>
+        /// Executing Directory where the files will be patched to
+        /// </summary>
         public String ExecutingDirectory { get; set; }
 
         #region Pre Patch
 
         #region Public Functions
 
+        /// <summary>
+        /// Checks which files needs to be updated
+        /// </summary>
+        /// <returns>A report containing all reportant information <seealso cref="UpdateReport"/></returns>
         public async Task<UpdateReport> CheckUpdateRequirement()
         {
             var report = new UpdateReport();
@@ -219,6 +236,9 @@ namespace LegendaryClient
             return null;
         }
 
+        /// <summary>
+        /// Creates the Media file structure if it does not exists yet
+        /// </summary>
         private void CreateMediaFileFolders()
         {
             if (!Directory.Exists(GetAssetsDirectory("champions")))
@@ -237,6 +257,13 @@ namespace LegendaryClient
                 Directory.CreateDirectory(GetAssetsDirectory("profileicon"));
         }
 
+        /// <summary>
+        /// Checks if the given file exists and is up to date
+        /// </summary>
+        /// <param name="installedVersion">Installed AIR version</param>
+        /// <param name="file">File that needs to be verified</param>
+        /// <param name="localpath">Local path of the given file</param>
+        /// <returns>True if the file is updated and exists, False if the file does not exists or needs to be updated</returns>
         private bool CheckIndividualAirFile(Version installedVersion, AirPatcherFile file, string localpath)
         {
             if (file == null || file.Version > installedVersion)
@@ -251,6 +278,12 @@ namespace LegendaryClient
             return true;
         }
 
+        /// <summary>
+        /// Checks if the Theme needs to be updated
+        /// </summary>
+        /// <param name="installedVersion">Installed AIR version</param>
+        /// <param name="files">Releasemanifest of newest version</param>
+        /// <returns>Files that needs to be updated and theme name </returns>
         private async Task<Tuple<AirPatcherFile[], string>> CheckTheme(Version installedVersion, AirPatcherFile[] files)
         {
             var themePropertiesFile = files.First(f => f.RelativePath.Contains("theme.properties"));
@@ -271,28 +304,38 @@ namespace LegendaryClient
             }
 
             var themePatcherFiles = files.Where(l => l.RelativePath.ToLower().Contains("loop") && l.RelativePath.Contains(theme)).ToArray();
-            var themeFullyInstalled = CheckThemeFilesInstalled(themePatcherFiles, theme);
+            var themeUpdateFiles = CheckThemeFilesInstalled(themePatcherFiles, theme);
 
-            if (themeFullyInstalled)
+            if (!themeUpdateFiles.Any())
                 return new Tuple<AirPatcherFile[], string>(null, theme);
-            return new Tuple<AirPatcherFile[], string>(themePatcherFiles, theme);
+
+            return new Tuple<AirPatcherFile[], string>(themeUpdateFiles, theme);
         }
 
-        private bool CheckThemeFilesInstalled(AirPatcherFile[] files, string theme)
+        /// <summary>
+        /// Check if the files for the given Theme exists and are up to date
+        /// </summary>
+        /// <param name="files">Theme files</param>
+        /// <param name="theme">Theme name</param>
+        /// <returns>All files that needs to be downloaded/updated</returns>
+        private AirPatcherFile[] CheckThemeFilesInstalled(AirPatcherFile[] files, string theme)
         {
+            var outdatedFiles = new List<AirPatcherFile>();
             if (Directory.Exists(GetAssetsDirectory("themes", theme)))
             {
                 var installedThemeFiles = Directory.GetFiles(GetAssetsDirectory("themes", theme)).Select(s => new FileInfo(s)).ToArray();
-                var equal =
-                    files.All(
-                        patcherFile =>
-                            installedThemeFiles.Any(f => f.Name.Equals(patcherFile.FileName, StringComparison.CurrentCultureIgnoreCase) && f.Length == patcherFile.FileSize));
-                return equal;
+                outdatedFiles.AddRange(files.Where(patcherFile => !installedThemeFiles.Any(f => f.Name.Equals(patcherFile.FileName, StringComparison.CurrentCultureIgnoreCase) && f.Length == patcherFile.FileSize)));
+                return outdatedFiles.ToArray();
             }
             Directory.CreateDirectory(GetAssetsDirectory("themes", theme));
-            return false;
+            return outdatedFiles.ToArray();
         }
 
+        /// <summary>
+        /// Downloads the file "theme.properties" to it's proper location
+        /// </summary>
+        /// <param name="themePropertiesFile">The file "theme.properties" as <see cref="AirPatcherFile"/></param>
+        /// <returns>Downloaded File as <see cref="T:byte[]"/></returns>
         private async Task<byte[]> DownloadThemePropertyFile(AirPatcherFile themePropertiesFile)
         {
             if (!Directory.Exists(GetAssetsDirectory("themes")))
@@ -303,6 +346,10 @@ namespace LegendaryClient
             return themePropertiesBytes;
         }
 
+        /// <summary>
+        /// Returnes the installed theme name
+        /// </summary>
+        /// <returns>Installed theme name</returns>
         private string GetInstalledThemeName()
         {
             if (!File.Exists(GetAssetsDirectory("themes", "theme.properties")))
@@ -319,6 +366,11 @@ namespace LegendaryClient
             }
         }
 
+        /// <summary>
+        /// Returns the installed theme name using the given file
+        /// </summary>
+        /// <param name="fileBytes">The file "theme.properties" as <see cref="T:byte[]"/></param>
+        /// <returns>Installed theme name</returns>
         private string GetInstalledThemeName(byte[] fileBytes)
         {
             try
@@ -417,14 +469,50 @@ namespace LegendaryClient
 
         #endregion
 
+        #region Post Patch
+
+        #region Public Functions
+
+
+
+        #endregion
+
+        #region Private Functions
+
+        #region Data Dragon
+
+
+
+        #endregion
+
+        #region Air
+
+
+
+        #endregion
+
+        #endregion
+
+        #endregion
+
         #region Helper Functions
 
+        /// <summary>
+        /// Produces an Error that will be thrown
+        /// </summary>
+        /// <param name="ex">Inner Exception</param>
+        /// <param name="fatalError">Fatal Error</param>
         private void ErrorKill(Exception ex, bool fatalError = true)
         {
             var r = new UpdateReport {ReportType = UpdateReportType.Error, Exception = ex, FatalError = fatalError};
             throw new PatcherException(r);
         }
 
+        /// <summary>
+        /// Creates an absolute Path for a given subdirectory of the "Assets" directory
+        /// </summary>
+        /// <param name="sub">Subpath of the "Assets" directory</param>
+        /// <returns>Absolute Path</returns>
         private string GetAssetsDirectory(params string[] sub)
         {
             var parts = new List<string> {ExecutingDirectory, "Assets"};

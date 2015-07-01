@@ -15,8 +15,7 @@ namespace TestApplication
     {
         static void Main(string[] args)
         {
-            RiotPatcher p = new RiotPatcher(BaseUpdateRegion.GetUpdateRegion("Live"));
-            p.ExecutingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            RiotPatcher p = new RiotPatcher(BaseUpdateRegion.GetUpdateRegion("Live"), Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
